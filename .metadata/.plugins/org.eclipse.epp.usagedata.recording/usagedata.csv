@@ -1,0 +1,5 @@
+what,kind,bundleId,bundleVersion,description,time
+stopped,bundle,org.eclipse.cdt.dsf.gdb,3.0.0.201009241320,"org.eclipse.cdt.dsf.gdb",1295140908395
+stopped,bundle,org.eclipse.cdt.launch,6.1.0.201009241320,"org.eclipse.cdt.launch",1295140908396
+stopped,bundle,org.eclipse.cdt.debug.ui,7.0.0.201009241320,"org.eclipse.cdt.debug.ui",1295140908398
+stopped,bundle,org.eclipse.cdt.managedbuilder.ui.tests,7.0.0.201009241320,"org.eclipse.cdt.managedbuilder.ui.tests",1295140908429
