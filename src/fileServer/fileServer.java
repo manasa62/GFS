@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.net.*;
 import java.io.*;
 
-public class fileServer implements Runnable {
+public class fileServer {
 
 	private int portNum;
 	File sharedFile;
@@ -17,12 +17,10 @@ public class fileServer implements Runnable {
 		this.sharedFile = new File(this.sharedFileName);
 	}
 
-	public void run() {
+	public void listen() {
 
 		ServerSocket server = null;
-		Socket connection = null;
-		ObjectOutputStream out = null;
-		ObjectInputStream in = null;
+		
 
 		System.out.println("Server Listening on port :" + portNum);
 		try {
@@ -32,89 +30,34 @@ public class fileServer implements Runnable {
 			e.printStackTrace();
 		}
 
-		try {
-			connection = server.accept();
-			System.out.println("Connection received from "
-					+ connection.getInetAddress().getHostName());
-		} catch (IOException e) {
-			System.out.println("Failed to accept!!!");
-			e.printStackTrace();
+		while(true){
+		    fileServerThread w;
+		    try{
+		//server.accept returns a client connection
+		      w = new fileServerThread(server.accept(), this.sharedFile);
+		      Thread t = new Thread(w);
+		      t.start();
+		    } catch (IOException e) {
+		      System.out.println("Accept failed: 1234");
+		      System.exit(-1);
+		    }
 		}
-		try {
-			out = new ObjectOutputStream(connection.getOutputStream());
-			in = new ObjectInputStream(connection.getInputStream());
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-
-		writeToFile(in);
-		try {
-			readFromFile();
-		} catch (IOException e2) {
-
-			e2.printStackTrace();
-		}
-
-		try {
-			in.close();
-			out.close();
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
+		
 
 	}
 
-	private void writeToFile(ObjectInputStream in) {
-		String msg = "first";
-		BufferedWriter file = null;
-		try {
-			file = new BufferedWriter(new FileWriter(this.sharedFileName));
-		} catch (IOException e3) {
-			System.out.println("Could not open the file for writing");
-			e3.printStackTrace();
-		}
-		while (!msg.equals("bye")) {
-			try {
-				msg = (String) in.readObject();
-				System.out.println("Client>> " + msg);
+	
 
-				file.append(msg + "\n");
-
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-
-				e.printStackTrace();
-			}
-		}
-		try {
-			file.close();
-		} catch (IOException e3) {
-
-			e3.printStackTrace();
-		}
-	}
-
-	public void readFromFile() throws IOException {
-
-		BufferedReader file1 = new BufferedReader(new FileReader(
-				this.sharedFileName));
-		String thisLine;
-		System.out.println("Printing contents of file");
-
-		while ((thisLine = file1.readLine()) != null) {
-			System.out.println(thisLine);
-		}
-		file1.close();
-
-	}
+	/*private void forkThread(ServerSocket server, String sharedFilename) {
+		
+		fileServerThread newConnection = new fileServerThread(server, sharedFile);
+		newConnection.start();
+		
+	}*/
 
 	public static void main(String args[]) throws IOException {
 
-		new Thread(new fileServer(1234)).start();
+		new fileServer(1234).listen();
 
 	}
 

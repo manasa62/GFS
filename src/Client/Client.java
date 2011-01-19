@@ -13,7 +13,8 @@ public class Client {
 	private int portNum;
 	private ObjectOutputStream out = null;
  	private ObjectInputStream in = null;
-	public Client(int portNum){
+	
+ 	public Client(int portNum){
 		this.portNum = portNum;
 	}
 	
