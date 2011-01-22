@@ -32,13 +32,14 @@ public class fileServer {
 
 		while(true){
 		    fileServerThread w;
+		   
 		    try{
 		//server.accept returns a client connection
 		      w = new fileServerThread(server.accept(), this.sharedFile);
 		      Thread t = new Thread(w);
 		      t.start();
 		    } catch (IOException e) {
-		      System.out.println("Accept failed: 1234");
+		      System.out.println("Accept failed: 4444");
 		      System.exit(-1);
 		    }
 		}
@@ -57,7 +58,7 @@ public class fileServer {
 
 	public static void main(String args[]) throws IOException {
 
-		new fileServer(1234).listen();
+		new fileServer(4444).listen();
 
 	}
 

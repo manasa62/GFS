@@ -17,6 +17,7 @@ public class fileServerThread implements Runnable{
 	
 	private Socket thisConnection;
 	private File sharedFile;
+	private static final String endOfConn = "END_OF_CONNECTION";
 	
 	public fileServerThread(Socket socket, File sharedFile){
 		this.thisConnection = socket;
@@ -40,7 +41,15 @@ public class fileServerThread implements Runnable{
 			e.printStackTrace();
 		}
 
-		writeToFile(in);
+		try {
+			writeToFile(in);
+		} catch (IOException e1) {
+			
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			
+			e1.printStackTrace();
+		}
 		try {
 			readFromFile();
 		} catch (IOException e2) {
@@ -58,21 +67,23 @@ public class fileServerThread implements Runnable{
 		
 	}
 	
-	private void writeToFile(ObjectInputStream in) {
-		String msg = "first";
+	private void writeToFile(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		String msg = null;
 		BufferedWriter file = null;
 		try {
-			file = new BufferedWriter(new FileWriter(this.sharedFile));
+			file = new BufferedWriter(new FileWriter(this.sharedFile, true));
 		} catch (IOException e3) {
 			System.out.println("Could not open the file for writing");
 			e3.printStackTrace();
 		}
-		while (!msg.equals("bye")) {
+		
+		msg = (String) in.readObject();
+		while (!(msg.equals(endOfConn))) {
 			try {
-				msg = (String) in.readObject();
 				System.out.println("Client>> " + msg);
-
+				if(msg !=null)
 				file.append(msg + "\n");
+				msg = (String) in.readObject();
 
 			} catch (IOException e) {
 
