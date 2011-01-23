@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -26,7 +28,6 @@ public class Router implements Runnable {
 	public HashMap<String, Router.CLIENTSTATE> clientStatus;
 	public HashMap<String, InetAddress> clientTable;
 	private int portNum;
-	private static final int FSportNum = 4444;
 
 	public Router(int portNum) {
 		this.msgQueue = new LinkedBlockingQueue<String>();
@@ -62,139 +63,110 @@ public class Router implements Runnable {
 
 	public void listen() {
 
-		ServerSocket server = null;
-		System.out.println("Server Listening on port :" + portNum);
-		try {
-			server = new ServerSocket(portNum);
-		} catch (IOException e) {
-			System.out.println("Listening failed on the port: " + portNum);
-			e.printStackTrace();
-		}
-
-		Socket connection = null;
-		ObjectOutputStream out = null;
-		ObjectInputStream in = null;
-
-		while (true) {
-			RouterThread w;
-			try {
-				// server.accept returns a client connection
-				w = new RouterThread(server.accept(), this);
-				Thread t = new Thread(w);
-				t.start();
-			} catch (IOException e) {
-				System.out.println("Accept failed: 1234");
-				System.exit(-1);
-			}
-		}
+		RouterThread w;
+		w = new RouterThread(this.portNum, this);
+		Thread t = new Thread(w);
+		t.start();
 
 	}
 
 	public void run() {
-		while(true){
-		if(msgQueue.size() > 3) {
-		System.out.println("Router requesting connection to FileServer... ");
-		Socket requestSocket = null;
-		ObjectOutputStream out = null;
-		ObjectInputStream in = null;
-		String message = null;
-		String msg = null;
+		while (true) {
+			if (msgQueue.size() > 3) {
+				System.out
+						.println("Router requesting connection to FileServer... ");
+				DatagramSocket requestSocket = null;
+				String message = null;
+				String msg = null;
 
-		try {
-			requestSocket = new Socket("127.0.0.1", this.FSportNum);
-			System.out.println("Connection established!!");
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			out = new ObjectOutputStream(requestSocket.getOutputStream());
-			out.flush();
-			System.out.println("Got the output stream");
-		} catch (IOException e1) {
-
-			e1.printStackTrace();
-		} finally  {
-			
-			System.out.println("Some exception caught in finally");
-		}
-		try {
-			in = new ObjectInputStream(requestSocket.getInputStream());
-			System.out.println("Got the input stream");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-
-		System.out.println("router>" + message);
-		try {
-			sendMessage("I want a connection", out);
-		} catch (IOException e2) {
-
-			e2.printStackTrace();
-		}
-		msg = "1";
-
-		
-		while(!this.msgQueue.isEmpty()) {
-			try {
-				msg = this.msgQueue.remove();
 				try {
-					sendMessage(msg, out);
+					requestSocket = new DatagramSocket();
+					System.out.println("Connection established!!");
 				} catch (IOException e) {
-
 					e.printStackTrace();
 				}
-			
 
-			} catch (NoSuchElementException e) {
-				
-			//	System.out.println("Queue empty");
-			/*try {
-					out.close();
-				} catch (IOException e1) {
-					System.out.println("Failed to close output stream");
-					e.printStackTrace();
-				}
+				/*
+				 * try { out = new
+				 * ObjectOutputStream(requestSocket.getOutputStream());
+				 * out.flush(); System.out.println("Got the output stream"); }
+				 * catch (IOException e1) {
+				 * 
+				 * e1.printStackTrace(); } finally {
+				 * 
+				 * System.out.println("Some exception caught in finally"); } try
+				 * { in = new ObjectInputStream(requestSocket.getInputStream());
+				 * System.out.println("Got the input stream"); } catch
+				 * (IOException e) {
+				 * 
+				 * e.printStackTrace(); }
+				 */
+
+				System.out.println("router>" + message);
 				try {
-					in.close();
-				} catch (IOException e1) {
-					System.out.println("Failed to close input stream");
+					sendMessage("I want a connection", requestSocket);
+				} catch (IOException e2) {
+
+					e2.printStackTrace();
+				}
+				msg = "1";
+
+				while (!this.msgQueue.isEmpty()) {
+					try {
+						msg = this.msgQueue.remove();
+						try {
+							sendMessage(msg, requestSocket);
+						} catch (IOException e) {
+
+							e.printStackTrace();
+						}
+
+					} catch (NoSuchElementException e) {
+
+						// System.out.println("Queue empty");
+						/*
+						 * try { out.close(); } catch (IOException e1) {
+						 * System.out.println("Failed to close output stream");
+						 * e.printStackTrace(); } try { in.close(); } catch
+						 * (IOException e1) {
+						 * System.out.println("Failed to close input stream");
+						 * e.printStackTrace(); }
+						 */
+
+					}
+
+				}
+
+				try {
+					sendMessage("END_OF_CONNECTION", requestSocket);
+				} catch (IOException e) {
 					e.printStackTrace();
-				}*/
-				
-			  }
+				}
 
 			}
-		
-		 try {
-			sendMessage("END_OF_CONNECTION", out);
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
-		
-		}
-	}
-
-		
 
 	}
 
-	private void sendMessage(String msg, ObjectOutputStream out)
+	private void sendMessage(String msg, DatagramSocket requestSocket)
 			throws IOException {
 
-		System.out.println("Trying to send message.. ");
-		out.writeObject(msg);
-		out.flush();
-		System.out.println("client>" + msg);
-
+		byte buf[] = new byte[1000];
+		try {
+			System.out.println("Trying to send message.. ");
+			DatagramPacket newpkt = new DatagramPacket(buf, buf.length,
+					InetAddress.getByName(GFSConstants.fileServerName), GFSConstants.FileServerPort);
+			newpkt.setData(msg.getBytes());
+			requestSocket.send(newpkt);
+			System.out.println("client>" + msg);
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
 	}
 
 	public static void main(String args[]) throws IOException {
 
-		new Router(1234).listen();
+		new Router(GFSConstants.RouterSendPort).listen();
 
 	}
 

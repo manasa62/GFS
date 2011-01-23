@@ -8,46 +8,45 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
+public class fileServerThread implements Runnable {
 
-
-public class fileServerThread implements Runnable{
-	
-	private Socket thisConnection;
+	private int portNum;
+	private DatagramSocket thisConnection;
 	private File sharedFile;
 	private static final String endOfConn = "END_OF_CONNECTION";
-	
-	public fileServerThread(Socket socket, File sharedFile){
-		this.thisConnection = socket;
+
+	public fileServerThread(int portNum, File sharedFile) throws SocketException {
+		this.portNum = portNum;
 		this.sharedFile = sharedFile;
-		
+		this.thisConnection=null;
+
 	}
 
 	@Override
 	public void run() {
-		
-	//	Socket connection = null;
-		ObjectOutputStream out = null;
-		ObjectInputStream in = null;
-		System.out.println("Connection received from "
-				+ thisConnection.getInetAddress().getHostName());
-		try {
-			out = new ObjectOutputStream(thisConnection.getOutputStream());
-			in = new ObjectInputStream(thisConnection.getInputStream());
-		} catch (IOException e) {
 
+		
+		System.out.println("Server Listening on port :" + portNum);
+		try {
+			this.thisConnection = new DatagramSocket(this.portNum);
+		} catch (IOException e) {
+			System.out.println("Listening failed on the port: " + portNum);
 			e.printStackTrace();
 		}
 
 		try {
-			writeToFile(in);
+			writeToFile();
 		} catch (IOException e1) {
-			
+
 			e1.printStackTrace();
 		} catch (ClassNotFoundException e1) {
-			
+
 			e1.printStackTrace();
 		}
 		try {
@@ -57,38 +56,40 @@ public class fileServerThread implements Runnable{
 			e2.printStackTrace();
 		}
 
-		try {
-			in.close();
-			out.close();
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-		
 	}
-	
-	private void writeToFile(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		String msg = null;
+
+	private void writeToFile() throws IOException, ClassNotFoundException {
+		
 		BufferedWriter file = null;
+		byte[] buf = new byte[1000];
+		DatagramPacket recvdPkt = new DatagramPacket(buf, buf.length);
+		try {
+			thisConnection.receive(recvdPkt);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		try {
 			file = new BufferedWriter(new FileWriter(this.sharedFile, true));
 		} catch (IOException e3) {
 			System.out.println("Could not open the file for writing");
 			e3.printStackTrace();
 		}
-		
-		msg = (String) in.readObject();
+		String msg = new String(recvdPkt.getData());
+
 		while (!(msg.equals(endOfConn))) {
 			try {
 				System.out.println("Client>> " + msg);
-				if(msg !=null)
-				file.append(msg + "\n");
-				msg = (String) in.readObject();
+				if (msg != null)
+					file.append(msg + "\n");
+
+				try {
+					thisConnection.receive(recvdPkt);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				msg = new String(recvdPkt.getData());
 
 			} catch (IOException e) {
-
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
 
 				e.printStackTrace();
 			}
@@ -117,7 +118,7 @@ public class fileServerThread implements Runnable{
 
 	public void start() {
 		this.start();
-		
+
 	}
 
 }

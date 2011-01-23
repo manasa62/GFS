@@ -17,48 +17,29 @@ public class fileServer {
 		this.sharedFile = new File(this.sharedFileName);
 	}
 
-	public void listen() {
+	public void listen() throws SocketException {
 
-		ServerSocket server = null;
-		
+		fileServerThread w;
 
-		System.out.println("Server Listening on port :" + portNum);
-		try {
-			server = new ServerSocket(portNum);
-		} catch (IOException e) {
-			System.out.println("Listening failed on the port: " + portNum);
-			e.printStackTrace();
-		}
-
-		while(true){
-		    fileServerThread w;
-		   
-		    try{
-		//server.accept returns a client connection
-		      w = new fileServerThread(server.accept(), this.sharedFile);
-		      Thread t = new Thread(w);
-		      t.start();
-		    } catch (IOException e) {
-		      System.out.println("Accept failed: 4444");
-		      System.exit(-1);
-		    }
-		}
-		
+		// server.accept returns a client connection
+		w = new fileServerThread(portNum, this.sharedFile);
+		Thread t = new Thread(w);
+		t.start();
 
 	}
 
-	
-
-	/*private void forkThread(ServerSocket server, String sharedFilename) {
-		
-		fileServerThread newConnection = new fileServerThread(server, sharedFile);
-		newConnection.start();
-		
-	}*/
+	/*
+	 * private void forkThread(ServerSocket server, String sharedFilename) {
+	 * 
+	 * fileServerThread newConnection = new fileServerThread(server,
+	 * sharedFile); newConnection.start();
+	 * 
+	 * }
+	 */
 
 	public static void main(String args[]) throws IOException {
 
-		new fileServer(4444).listen();
+		new fileServer(GFSConstants.FileServerPort).listen();
 
 	}
 

@@ -5,112 +5,109 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import fileServer.GFSConstants;
 
 public class Client {
 
 	private int portNum;
-	private ObjectOutputStream out = null;
- 	private ObjectInputStream in = null;
-	
- 	public Client(int portNum){
+
+	public Client(int portNum) {
 		this.portNum = portNum;
 	}
-	
-	public void request(){
+
+	public void request() {
 		System.out.println("Client requesting... ");
-		Socket requestSocket = null;
-		
-	 	String message = null;
-	 	String msg = null;
-	 	
-	 	try {
-			requestSocket = new Socket("127.0.0.1", portNum);
+		DatagramSocket requestSocket = null;
+
+		String message = null;
+		String msg = null;
+
+		try {
+			requestSocket = new DatagramSocket();
+
 			System.out.println("Connection established!!");
-		} catch (UnknownHostException e) {
-				e.printStackTrace();
+
 		} catch (IOException e) {
-				e.printStackTrace();
-		}
-		
-		try {
-			out = new ObjectOutputStream(requestSocket.getOutputStream());
-			out.flush();
-			System.out.println("Got the output stream");
-		} catch (IOException e1) {
-			
-			e1.printStackTrace();
-		} finally {
-			System.out.println("Some exception caught in finally");
-		}
-		try {
-			in = new ObjectInputStream(requestSocket.getInputStream());
-			System.out.println("Got the input stream");
-		} catch (IOException e) {
-			
 			e.printStackTrace();
 		}
-		/*try {
-			System.out.println("Reading input object");
-			message = (String)in.readObject();
-			System.out.println("Read the input object");
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			
-			e.printStackTrace();
-		}*/	
+
+		/*
+		 * try { out = new ObjectOutputStream(requestSocket.getOutputStream());
+		 * out.flush(); System.out.println("Got the output stream"); } catch
+		 * (IOException e1) {
+		 * 
+		 * e1.printStackTrace(); } finally {
+		 * 
+		 * } try { in = new ObjectInputStream(requestSocket.getInputStream());
+		 * System.out.println("Got the input stream"); } catch (IOException e) {
+		 * 
+		 * e.printStackTrace(); } /* try {
+		 * System.out.println("Reading input object"); message =
+		 * (String)in.readObject(); System.out.println("Read the input object");
+		 * } catch (IOException e) {
+		 * 
+		 * e.printStackTrace(); } catch (ClassNotFoundException e) {
+		 * 
+		 * e.printStackTrace(); }
+		 */
 		System.out.println("server>" + message);
-		sendMessage("I want a connection");
-		msg = "1";
+		sendHelloMessage(requestSocket);
+		msg = "dummy";
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		while(!msg.equals("bye")){
-		System.out.println("Enter the message to send: ");
-		try {
-			msg = br.readLine();
-		} catch (IOException e1) {
-			System.out.println("Failed to read message");
-			e1.printStackTrace();
+
+		while (!msg.equals("bye")) {
+			System.out.println("Enter the message to send: ");
+			try {
+				msg = br.readLine();
+			} catch (IOException e1) {
+				System.out.println("Failed to read message");
+				e1.printStackTrace();
+			}
+
+			sendMessage(msg, requestSocket);
 		}
-		
-		sendMessage(msg);
-		}
-		sendMessage("bye");
-	 	try {
-			out.close();
-		} catch (IOException e) {
-		 System.out.println("Failed to close output stream");
-			e.printStackTrace();
-		}
-	 	try {
-			in.close();
-		} catch (IOException e) {
-			System.out.println("Failed to close input stream");
-			e.printStackTrace();
-		}
+		sendTerminateMessage(requestSocket);
+
 	}
 
-	private void sendMessage(String msg){
+	private void sendMessage(String msg, DatagramSocket requestSocket) {
 		{
-			try{
-				System.out.println("Trying to send message.. ");
-				out.writeObject(msg);
-				out.flush();
+			byte buf[] = new byte[1000];
+			try {
+				System.out.println("Sending message -- " + msg);
+				DatagramPacket newpkt = new DatagramPacket(buf, buf.length,
+						InetAddress.getByName(GFSConstants.routerName),
+						this.portNum);
+				newpkt.setData(msg.getBytes());
+				requestSocket.send(newpkt);
 				System.out.println("client>" + msg);
-			}
-			catch(IOException ioException){
+			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}
 		}
 
-		
 	}
-	
-	public static void main(String args[])
-	{
-		Client client = new Client(1234);
+
+	private void sendHelloMessage(DatagramSocket requestSocket) {
+		String helloMsg = "Hello";
+		sendMessage(helloMsg, requestSocket);
+
+	}
+
+	private void sendTerminateMessage(DatagramSocket requestSocket) {
+		String terminateMsg = "Bye";
+		sendMessage(terminateMsg, requestSocket);
+	}
+
+	public static void main(String args[]) {
+		Client client = new Client(GFSConstants.RouterSendPort);
 		client.request();
 	}
 
