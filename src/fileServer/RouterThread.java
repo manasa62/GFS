@@ -85,9 +85,16 @@ public class RouterThread implements Runnable {
 		if (!(router.getClientTable().containsKey(recvdPkt.getAddress().getHostName()))) {
 			router.getClientTable().put(recvdPkt.getAddress().getHostName(),
 					recvdPkt.getAddress());
+			
+		if (!(router.getClientStatus().containsKey(recvdPkt.getAddress().getHostName()))) {
+				router.getClientStatus().put(recvdPkt.getAddress().getHostName(),
+						Router.CLIENTSTATE.UP);
+			}
 			printRouterClientTable();
 		}
 
+		
+		
 		msg = new String(recvdPkt.getData());
 		System.out.println("packet data received is :"+msg);
 		while (!msg.equals("bye")) {
@@ -101,6 +108,11 @@ public class RouterThread implements Runnable {
 				if (!(router.getClientTable().containsKey(recvdPkt.getAddress().getHostName()))) {
 					router.getClientTable().put(recvdPkt.getAddress().getHostName(),
 							recvdPkt.getAddress());
+				
+				if (!(router.getClientStatus().containsKey(recvdPkt.getAddress().getHostName()))) {
+					router.getClientStatus().put(recvdPkt.getAddress().getHostName(),
+							Router.CLIENTSTATE.UP);
+				}
 					printRouterClientTable();
 				}
 				

@@ -20,13 +20,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Router implements Runnable {
 
-	private enum CLIENTSTATE {
-		UP, DOWN
+	public enum CLIENTSTATE {
+		UP, BLOCKED, DOWN
 	};
 
 	public LinkedBlockingQueue<String> msgQueue;
-	public HashMap<String, Router.CLIENTSTATE> clientStatus;
-	public HashMap<String, InetAddress> clientTable;
+	public static HashMap<String, Router.CLIENTSTATE> clientStatus;
+	public static HashMap<String, InetAddress> clientTable;
 	private int portNum;
 
 	public Router(int portNum) {
