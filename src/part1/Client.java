@@ -135,7 +135,7 @@ public class Client implements Runnable {
 
 		try {
 			thisConnection = new DatagramSocket(GFSConstants.ClientPort);
-			System.out.println("Client waiting to get packets");
+			
 		} catch (IOException e) {
 			System.out.println("Listening failed on the client");
 			e.printStackTrace();

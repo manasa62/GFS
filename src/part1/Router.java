@@ -91,25 +91,6 @@ public class Router implements Runnable {
 					e.printStackTrace();
 				}
 
-				/*
-				 * try { out = new
-				 * ObjectOutputStream(requestSocket.getOutputStream());
-				 * out.flush(); System.out.println("Got the output stream"); }
-				 * catch (IOException e1) {
-				 * 
-				 * e1.printStackTrace(); } finally {
-				 * 
-				 * System.out.println("Some exception caught in finally"); } try
-				 * { in = new ObjectInputStream(requestSocket.getInputStream());
-				 * System.out.println("Got the input stream"); } catch
-				 * (IOException e) {
-				 * 
-				 * e.printStackTrace(); }
-				 */
-
-				
-				// sendHelloMessage("I want a connection", requestSocket);
-
 				while (!this.msgQueue.isEmpty()) {
 					try {
 						msg = this.msgQueue.remove();
@@ -151,9 +132,10 @@ public class Router implements Runnable {
 		DatagramPacket newpkt = null;
 		InetAddress ip = null;
 		try {
-			System.out.println("Trying to send message.. ");
+			//System.out.println("Trying to send message.. ");
 			msgparts = new String[5];
 			msgparts = msg.split(":", 2);
+			if(Router.clientStatus.get(msgparts[0]).equals(CLIENTSTATE.UP)) {
 			String hostname = Router.clientTable.get(msgparts[0]);
 			try {
 				ip = InetAddress.getByName(hostname);
@@ -171,7 +153,12 @@ public class Router implements Runnable {
 			newpkt.setData(msgparts[1].getBytes());
 			requestSocket.send(newpkt);
 
-		} catch (IOException ioException) {
+		} 
+			else if(Router.clientStatus.get(msgparts[0]).equals(CLIENTSTATE.BLOCKED)){
+				this.msgQueue.add(msg);
+			}
+			
+		}catch (IOException ioException) {
 			ioException.printStackTrace();
 		}
 	}
@@ -209,7 +196,17 @@ public class Router implements Runnable {
 			System.out.println(key + " : " + value);
 		}
 
+		startStatusMaintainThread();
+
 		new Router(GFSConstants.RouterSendPort).listen();
+
+	}
+
+	private static void startStatusMaintainThread() {
+		MaintainLinkStates w;
+		w = new MaintainLinkStates();
+		Thread t = new Thread(w);
+		t.start();
 
 	}
 

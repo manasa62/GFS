@@ -8,18 +8,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class MaintainLinkStates implements Runnable {
-	public MaintainLinkStates(){
-		
-	}
-
-	public static void main(String args[]) throws IOException {
-
-		printActiveClients();
-		
+	public MaintainLinkStates() {
 
 	}
-
-	
 
 	private static void printActiveClients() {
 		int i = 1;
@@ -31,41 +22,69 @@ public class MaintainLinkStates implements Runnable {
 			String value = Router.clientStatus.get(key).toString();
 
 			System.out.println(i + " Host " + i + ":" + key + " "
-					+ "Link status "+ value);
+					+ "Link status " + value);
 
 		}
 
 	}
 
-	@Override
 	public void run() {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		String input = new String();
-		String state = new String();
-		System.out.println("Enter the host whose state should be changed");
-		try {
-			input = br.readLine();
-		} catch (IOException e) {
+		while (true) {
+			printActiveClients();
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					System.in));
+			String input = new String();
+			String state = new String();
+			System.out.println("Do you want to change the link status?(y/n)");
+			try {
+				input = br.readLine();
+				while (input.equals("y")) {
+					System.out
+							.println("Enter the host whose state should be changed");
+					try {
+						input = br.readLine();
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+
+					System.out.println("Enter the state:UP/DOWN/BLOCK ");
+					try {
+						state = br.readLine();
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+					if (state.equals("UP")) {
+						Router.clientStatus.put(input, Router.CLIENTSTATE.UP);
+					} else if (state.equals("DOWN")) {
+						Router.clientStatus.put(input, Router.CLIENTSTATE.DOWN);
+					} else {
+						Router.clientStatus.put(input,
+								Router.CLIENTSTATE.BLOCKED);
+					}
+
+					System.out
+							.println("Do you want to change the link status?(y/n)");
+					input = br.readLine();
+
+				}
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+
+					e.printStackTrace();
+				}
+
+			} catch (IOException e1) {
+
+				e1.printStackTrace();
+			}
+
 			
-			e.printStackTrace();
-		}
-		
-		System.out.println("Enter the state:UP/DOWN/BLOCK ");
-		try {
-			state = br.readLine();
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-		}
-		if (state.equals("UP")) {
-			Router.clientStatus.put(input, Router.CLIENTSTATE.UP);
-		} else if (state.equals("DOWN")) {
-			Router.clientStatus.put(input, Router.CLIENTSTATE.DOWN);
-		} else {
-			Router.clientStatus.put(input, Router.CLIENTSTATE.BLOCKED);
 		}
 	}
-	
+
 	public void start() {
 		this.start();
 
