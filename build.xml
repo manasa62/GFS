@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<project name="GFS" basedir=".">
+    <description>
+        Builds, tests, and runs the project CS271-GFS
+    </description>
+    
+    <property name="src" location="src"/>
+    <property name="build" location="build/classes"/>
+    <property name="port" value="3672"/>
+	<property name="username" value="manasa"/>
+	<property name="hw_folder" value="hw1"/>
+    
+    
+    <!-- host names -->
+    <property name="host1" value="snoopy.cs.ucsb.edu"/>
+    <property name="host2" value="lisa.cs.ucsb.edu"/>
+    <property name="host3" value="calvin.cs.ucsb.edu"/>
+    <property name="host4" value="optimus.cs.ucsb.edu"/>
+    
+    <property name="host6" value="yogi.cs.ucsb.edu"/>
+    <property name="host7" value="taz.cs.ucsb.edu"/>
+    <property name="host8" value="speed.cs.ucsb.edu"/>
+    <property name="host9" value="dizzy.cs.ucsb.edu"/>
+    <property name="host10" value="dilbert.cs.ucsb.edu"/>
+    <property name="host11" value="marge.cs.ucsb.edu"/>
+    <property name="host12" value="whiley.cs.ucsb.edu"/>
+    
+    <property name="host14" value="brain.cs.ucsb.edu"/>
+    <property name="host15" value="tick.cs.ucsb.edu"/>
+    <property name="host16" value="homer.cs.ucsb.edu"/>
+    <property name="host_computespace" value="snoopy.cs.ucsb.edu"/>
+    
+    
+    
+    <target name="compile" description="compiles the source">
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}"/>
+        
+        <!-- Compile the java code from ${src} into ${build} -->
+        <javac srcdir="${src}" destdir="${build}"/>
+    </target>
+    
+    <target name="javadoc" description="create javadocs" depends="compile">
+        <javadoc packagenames="Client.*,fileServer.*" sourcepath="${src}" destdir="documents/javadoc"/>
+    </target>
+    
+    
+    
+    
+    
+    
+    <target name="runLocalFileServer" depends="compile" description="run a File Server Locally">
+        
+        <!-- run computer -->
+        <java classname="part1.fileServer" fork="true">
+            <arg value="localhost:${port}"/>
+            <classpath>
+                <pathelement location="${build}/"/>
+            </classpath>
+        </java>
+    </target>
+    
+    
+    <target name="runLocalRouter" description="runs Router Locally">
+        
+        
+        <java classname="part1.Router" fork="true">
+            
+            <classpath>
+                <pathelement location="${build}/"/>
+            </classpath>
+        </java>
+    </target>
+    
+    
+    
+    
+    <target name="runLocalClient" description="runs Client on Locally">
+        
+        <!-- run remote space -->
+        <java classname="part1.Client" fork="true">
+            
+            <classpath>
+                <pathelement location="${build}/"/>
+            </classpath>
+        </java>
+    </target>
+    
+    <target name="runRemoteFileServer" depends="compile" description="run a File Server remotely">
+        
+        <sshexec host="${host1}" username="${username}" keyfile="/cs/student/${username}/.ssh/headless_rsa" trust="true" command="cd /cs/student/${username}/${hw_folder}/; ant runLocalFileServer" passphrase=""/>
+    </target>
+    
+    
+    <target name="runRemoteRouter" description="runs Router remotely">
+        
+        <sshexec host="${host2}" username="${username}" keyfile="/cs/student/${username}/.ssh/headless_rsa" trust="true" command="cd /cs/student/${username}/${hw_folder}/; ant runLocalRouter" passphrase=""/>
+    </target>
+    
+    
+    
+    
+    <target name="runRemoteClient1" description="runs Client on remotely">
+        
+       <sshexec host="${host3}" username="${username}" keyfile="/cs/student/${username}/.ssh/headless_rsa" trust="true" command="cd /cs/student/${username}/${hw_folder}/; ant runLocalClient" passphrase=""/>
+    </target>
+    
+    
+    <target name="runRemoteClient2" description="runs Client on remotely">
+        
+       <sshexec host="${host4}" username="${username}" keyfile="/cs/student/${username}/.ssh/headless_rsa" trust="true" command="cd /cs/student/${username}/${hw_folder}/; ant runLocalClient" passphrase=""/>
+    </target>
+    
+    
+</project>
